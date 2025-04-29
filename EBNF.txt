@@ -1,0 +1,67 @@
+SCRIPT          = { STATEMENT } ;
+
+STATEMENT       = ( λ
+                  | ZONE_DECL
+                  | PLANT
+                  | WATER
+                  | HARVEST
+                  | FERTILIZE
+                  | PRUNE
+                  | WAIT
+                  | LOOP
+                  | IF
+                  ), "\n" ;
+
+ZONE_DECL       = "ZONE", IDENTIFIER, "=", "(", COORD, "-", COORD, ")" ;
+
+PLANT           = "PLANT", PLANT_TYPE, "AT", "(", COORD, ")", [ "IN", IDENTIFIER ] ;
+
+WATER           = "WATER", "(", COORD, ")", "FOR", DURATION, [ "IF", SENSOR_COND ] ;
+
+HARVEST         = "HARVEST", PLANT_TYPE, [ "FROM", IDENTIFIER ] ;
+
+FERTILIZE       = "FERTILIZE", FERTILIZER_TYPE, "AT", "(", COORD, ")", "FOR", DURATION ;
+
+PRUNE           = "PRUNE", PLANT_TYPE, "AT", "(", COORD, ")" ;
+
+WAIT            = "WAIT", DURATION ;
+
+LOOP            = "LOOP", NUMBER, "TIMES", BLOCK ;
+
+IF              = "IF", CONDITION, BLOCK, [ "ELSE", BLOCK ] ;
+
+BLOCK           = "{", "\n", { STATEMENT }, "}" ;
+
+/* EXPRESSÕES E TIPOS AUXILIARES */
+
+COORD           = NUMBER, ",", NUMBER ;
+
+DURATION        = NUMBER, ( "s" | "m" | "h" )    ;  /* segundos, minutos, horas */
+
+SENSOR_COND     = SENSOR_TYPE, COMP, VALUE, [ "AT", "(", COORD, ")" ] ;
+
+CONDITION       = SOIL_COND | WEATHER_COND | SENSOR_COND ;
+
+SOIL_COND       = "SOIL_MOISTURE", COMP, VALUE, [ "AT", "(", COORD, ")" ] ;
+
+WEATHER_COND    = "WEATHER", ".", WEATHER_FIELD, COMP, VALUE ;
+
+WEATHER_FIELD   = "TEMPERATURE" | "HUMIDITY" | "RAIN" ;
+
+COMP            = "<" | ">" | "==" | "<=" | ">=" ;
+
+VALUE           = NUMBER, [ "%" ] ;
+
+PLANT_TYPE      = IDENTIFIER ;
+
+FERTILIZER_TYPE = IDENTIFIER ;
+
+SENSOR_TYPE     = "MOISTURE_SENSOR" | "TEMPERATURE_SENSOR" | "HUMIDITY_SENSOR" ;
+
+IDENTIFIER      = LETTER, { LETTER | DIGIT | "_" } ;
+
+NUMBER          = DIGIT, { DIGIT } ;
+
+LETTER          = "a" | … | "z" | "A" | … | "Z" ;
+
+DIGIT           = "0" | … | "9" ;
