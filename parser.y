@@ -157,7 +157,7 @@ if_stmt: IF condition block else_clause
                 { printf("If statement\n"); }
    ;
 
-condition: SOIL_COND | WEATHER_COND | SENSOR_COND | VARCOMP LT NUMBER PERCENT { printf("Sensor condition\n"); } ;
+condition: SOIL_COND | WEATHER_COND | SENSOR_COND | VARCOMP COMP NUMBER PERCENT_OPT { printf("Sensor condition\n"); } ;
 
 SOIL_COND: SOIL_MOISTURE COMP VALUE AT_CLAUSE ;
 
