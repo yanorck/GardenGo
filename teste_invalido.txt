@@ -1,0 +1,3 @@
+IF MOISTURE_SENSOR =< 40 {  %%%% ERRO DE SINTAXE
+    WAIT 2h
+}
