@@ -1,0 +1,6 @@
+LOOP 3 TIMES {
+    PLANT Semente AT (5,5)
+    WAIT 1s
+}
+
+PLANT Fim AT (9,9)

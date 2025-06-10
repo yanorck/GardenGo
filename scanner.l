@@ -1,5 +1,6 @@
 %{
 #include "parser.tab.h"
+#include "types.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -46,6 +47,7 @@ void yyerror(const char *s);
 ","             { return ','; }
 "-"             { return '-'; }
 "="             { return '='; }
+"."             { return DOT; }
 <<EOF>>         { return 0; }
 \n              { yylineno++; return NEWLINE; }
 \r\n            { yylineno++; return NEWLINE; }
@@ -57,7 +59,6 @@ void yyerror(const char *s);
     return DURATION; 
 }
 [0-9]+          { yylval.number = atoi(yytext); return NUMBER; }
-[A-Za-z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*   { yylval.str = strdup(yytext); return VARCOMP; }
 [A-Za-z_][A-Za-z0-9_]* { yylval.identifier = strdup(yytext); return IDENTIFIER; }
 "%"             { return PERCENT; }
 .               { 

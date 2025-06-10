@@ -1,0 +1,24 @@
+ZONE Zona1 = (1,2 - 3,4)
+
+PLANT Alface AT (1,2) IN Zona1
+
+WATER (2,3) FOR 10s IF MOISTURE_SENSOR < 30%
+
+HARVEST Alface FROM Zona1
+
+FERTILIZE NPK AT (2,3) FOR 2h
+
+PRUNE Alface AT (3,4)
+
+WAIT 5m
+
+LOOP 2 TIMES {
+    WATER (1,2) FOR 5s
+    WAIT 1s
+}
+
+IF WEATHER.TEMPERATURE > 25 {
+    PLANT Tomate AT (1,1)
+} ELSE {
+    PLANT Couve AT (2,2)
+}

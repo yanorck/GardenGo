@@ -1,0 +1,9 @@
+IF WEATHER.TEMPERATURE > 25 {
+    PLANT Tomate AT (1,1)
+}
+
+IF WEATHER.TEMPERATURE < 10 {
+    WAIT 1h
+} ELSE {
+    PLANT Couve AT (2,2)
+}

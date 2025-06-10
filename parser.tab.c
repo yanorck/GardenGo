@@ -73,12 +73,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-void yyerror(const char *s) {
-    fprintf(stderr, "Error: %s\n", s);
-}
+// O que é específico para as AÇÕES do parser fica aqui
+#include "ast.h"
+
+void yyerror(struct AST_Node** ast_root, const char* s);
 
 extern int yylex();
-extern FILE *yyin;
 extern int yylineno;
 
 #line 85 "parser.tab.c"
@@ -145,15 +145,15 @@ enum yysymbol_kind_t
   YYSYMBOL_GE = 33,                        /* GE  */
   YYSYMBOL_PERCENT = 34,                   /* PERCENT  */
   YYSYMBOL_NEWLINE = 35,                   /* NEWLINE  */
-  YYSYMBOL_36_ = 36,                       /* '('  */
-  YYSYMBOL_37_ = 37,                       /* ')'  */
-  YYSYMBOL_38_ = 38,                       /* '{'  */
-  YYSYMBOL_39_ = 39,                       /* '}'  */
-  YYSYMBOL_40_ = 40,                       /* ','  */
-  YYSYMBOL_41_ = 41,                       /* '-'  */
-  YYSYMBOL_42_ = 42,                       /* '='  */
-  YYSYMBOL_VARCOMP = 43,                   /* VARCOMP  */
-  YYSYMBOL_44_ = 44,                       /* '.'  */
+  YYSYMBOL_DOT = 36,                       /* DOT  */
+  YYSYMBOL_37_ = 37,                       /* '('  */
+  YYSYMBOL_38_ = 38,                       /* ')'  */
+  YYSYMBOL_39_ = 39,                       /* '{'  */
+  YYSYMBOL_40_ = 40,                       /* '}'  */
+  YYSYMBOL_41_ = 41,                       /* ','  */
+  YYSYMBOL_42_ = 42,                       /* '-'  */
+  YYSYMBOL_43_ = 43,                       /* '='  */
+  YYSYMBOL_IF_THEN_ELSE = 44,              /* IF_THEN_ELSE  */
   YYSYMBOL_YYACCEPT = 45,                  /* $accept  */
   YYSYMBOL_program = 46,                   /* program  */
   YYSYMBOL_statements = 47,                /* statements  */
@@ -165,26 +165,25 @@ enum yysymbol_kind_t
   YYSYMBOL_IN_OPTION = 53,                 /* IN_OPTION  */
   YYSYMBOL_water_stmt = 54,                /* water_stmt  */
   YYSYMBOL_IF_CLAUSE = 55,                 /* IF_CLAUSE  */
-  YYSYMBOL_SENSOR_COND = 56,               /* SENSOR_COND  */
-  YYSYMBOL_SENSOR_TYPE = 57,               /* SENSOR_TYPE  */
-  YYSYMBOL_COMP = 58,                      /* COMP  */
-  YYSYMBOL_VALUE = 59,                     /* VALUE  */
-  YYSYMBOL_PERCENT_OPT = 60,               /* PERCENT_OPT  */
-  YYSYMBOL_AT_CLAUSE = 61,                 /* AT_CLAUSE  */
-  YYSYMBOL_harvest_stmt = 62,              /* harvest_stmt  */
-  YYSYMBOL_FROM_OPTION = 63,               /* FROM_OPTION  */
-  YYSYMBOL_fertilize_stmt = 64,            /* fertilize_stmt  */
-  YYSYMBOL_FERTILIZER_TYPE = 65,           /* FERTILIZER_TYPE  */
-  YYSYMBOL_prune_stmt = 66,                /* prune_stmt  */
-  YYSYMBOL_wait_stmt = 67,                 /* wait_stmt  */
-  YYSYMBOL_loop_stmt = 68,                 /* loop_stmt  */
-  YYSYMBOL_block = 69,                     /* block  */
-  YYSYMBOL_if_stmt = 70,                   /* if_stmt  */
-  YYSYMBOL_condition = 71,                 /* condition  */
-  YYSYMBOL_SOIL_COND = 72,                 /* SOIL_COND  */
-  YYSYMBOL_WEATHER_COND = 73,              /* WEATHER_COND  */
-  YYSYMBOL_WEATHER_FIELD = 74,             /* WEATHER_FIELD  */
-  YYSYMBOL_else_clause = 75                /* else_clause  */
+  YYSYMBOL_condition = 56,                 /* condition  */
+  YYSYMBOL_SOIL_COND = 57,                 /* SOIL_COND  */
+  YYSYMBOL_WEATHER_COND = 58,              /* WEATHER_COND  */
+  YYSYMBOL_SENSOR_COND = 59,               /* SENSOR_COND  */
+  YYSYMBOL_SENSOR_TYPE = 60,               /* SENSOR_TYPE  */
+  YYSYMBOL_WEATHER_FIELD = 61,             /* WEATHER_FIELD  */
+  YYSYMBOL_COMP = 62,                      /* COMP  */
+  YYSYMBOL_VALUE = 63,                     /* VALUE  */
+  YYSYMBOL_PERCENT_OPT = 64,               /* PERCENT_OPT  */
+  YYSYMBOL_AT_CLAUSE_COORD = 65,           /* AT_CLAUSE_COORD  */
+  YYSYMBOL_harvest_stmt = 66,              /* harvest_stmt  */
+  YYSYMBOL_FROM_OPTION = 67,               /* FROM_OPTION  */
+  YYSYMBOL_fertilize_stmt = 68,            /* fertilize_stmt  */
+  YYSYMBOL_FERTILIZER_TYPE = 69,           /* FERTILIZER_TYPE  */
+  YYSYMBOL_prune_stmt = 70,                /* prune_stmt  */
+  YYSYMBOL_wait_stmt = 71,                 /* wait_stmt  */
+  YYSYMBOL_loop_stmt = 72,                 /* loop_stmt  */
+  YYSYMBOL_block = 73,                     /* block  */
+  YYSYMBOL_if_stmt = 74                    /* if_stmt  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -512,19 +511,19 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  3
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   117
+#define YYLAST   109
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  45
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  31
+#define YYNNTS  30
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  58
+#define YYNRULES  56
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  127
+#define YYNSTATES  122
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   291
+#define YYMAXUTOK   292
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -542,15 +541,15 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      36,    37,     2,     2,    40,    41,    44,     2,     2,     2,
+      37,    38,     2,     2,    41,    42,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,    42,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,    43,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    38,     2,    39,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,    39,     2,    40,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -567,19 +566,19 @@ static const yytype_int8 yytranslate[] =
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
-      35,    43
+      35,    36,    44
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    48,    48,    51,    52,    55,    56,    57,    58,    59,
-      60,    61,    62,    63,    64,    67,    75,    83,    87,    89,
-      90,    93,    97,    98,   101,   105,   106,   107,   110,   110,
-     110,   110,   110,   112,   116,   117,   120,   121,   124,   128,
-     129,   132,   136,   138,   142,   148,   152,   156,   160,   160,
-     160,   160,   162,   164,   168,   169,   170,   173,   174
+       0,    61,    61,    67,    68,    70,    71,    72,    73,    74,
+      75,    76,    77,    78,    79,    81,    83,    85,    87,    89,
+      89,    91,    93,    93,    95,    95,    95,    97,    99,   101,
+     103,   103,   103,   105,   105,   105,   107,   107,   107,   107,
+     107,   109,   111,   111,   113,   113,   115,   117,   117,   119,
+     121,   123,   125,   127,   129,   131,   132
 };
 #endif
 
@@ -600,14 +599,14 @@ static const char *const yytname[] =
   "WAIT", "LOOP", "TIMES", "IF", "ELSE", "AT", "IN", "FOR", "FROM",
   "MOISTURE_SENSOR", "TEMPERATURE_SENSOR", "HUMIDITY_SENSOR",
   "TEMPERATURE", "HUMIDITY", "RAIN", "SOIL_MOISTURE", "WEATHER", "EQ",
-  "LT", "GT", "LE", "GE", "PERCENT", "NEWLINE", "'('", "')'", "'{'", "'}'",
-  "','", "'-'", "'='", "VARCOMP", "'.'", "$accept", "program",
+  "LT", "GT", "LE", "GE", "PERCENT", "NEWLINE", "DOT", "'('", "')'", "'{'",
+  "'}'", "','", "'-'", "'='", "IF_THEN_ELSE", "$accept", "program",
   "statements", "statement", "zone_decl", "COORD", "plant_stmt",
-  "PLANT_TYPE", "IN_OPTION", "water_stmt", "IF_CLAUSE", "SENSOR_COND",
-  "SENSOR_TYPE", "COMP", "VALUE", "PERCENT_OPT", "AT_CLAUSE",
+  "PLANT_TYPE", "IN_OPTION", "water_stmt", "IF_CLAUSE", "condition",
+  "SOIL_COND", "WEATHER_COND", "SENSOR_COND", "SENSOR_TYPE",
+  "WEATHER_FIELD", "COMP", "VALUE", "PERCENT_OPT", "AT_CLAUSE_COORD",
   "harvest_stmt", "FROM_OPTION", "fertilize_stmt", "FERTILIZER_TYPE",
-  "prune_stmt", "wait_stmt", "loop_stmt", "block", "if_stmt", "condition",
-  "SOIL_COND", "WEATHER_COND", "WEATHER_FIELD", "else_clause", YY_NULLPTR
+  "prune_stmt", "wait_stmt", "loop_stmt", "block", "if_stmt", YY_NULLPTR
 };
 
 static const char *
@@ -631,19 +630,19 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-     -72,     7,    14,   -72,     2,    31,   -18,    31,    36,    31,
-      42,    25,    23,   -72,   -72,    17,    26,    27,    28,    30,
-      32,    33,    34,    35,    -1,   -72,    47,    68,    52,   -72,
-      56,    57,   -72,    61,   -72,   -72,   -72,    24,    38,    24,
-     -72,    24,    39,   -72,   -72,   -72,   -72,   -72,   -72,   -72,
-     -72,   -72,   -72,   -72,    40,    43,    41,    46,    74,   -72,
-      44,    48,    39,   -72,   -72,   -72,   -72,   -72,    82,     6,
-      83,    82,   -72,    71,    68,    68,    85,    70,   -72,    68,
-      68,   -72,    58,    73,   -72,   -72,   -72,    24,    58,    73,
-       4,    39,   -72,    50,    59,   -72,    88,    60,    62,   -72,
-     -72,    64,   -72,    82,   -72,   -72,   -72,   -72,    68,    76,
-      80,    79,   -72,    68,   -72,    65,    97,   -72,    37,   -72,
-      98,    67,   -72,   -72,   -72,   -72,   -72
+     -72,     5,    13,   -72,     4,    23,   -20,    23,    25,    23,
+      31,    38,    12,   -72,   -72,     9,    22,    24,    26,    27,
+      28,    29,    30,    32,    15,   -72,    43,    52,    46,   -72,
+      51,    53,   -72,    55,   -72,   -72,   -72,    20,    35,    33,
+     -72,   -72,   -72,    20,   -72,   -72,   -72,   -72,   -72,   -72,
+     -72,   -72,   -72,    36,    37,    34,    39,    72,   -72,    41,
+      42,    33,   -72,   -72,   -72,   -72,   -72,    77,    21,   -72,
+      65,    77,    52,    52,    79,    64,   -72,    52,    52,   -72,
+      50,    68,   -72,   -72,   -72,    20,     3,    33,    68,    44,
+      49,   -72,    83,    54,    56,   -72,   -72,    58,   -72,    77,
+     -72,   -72,   -72,    52,    71,    75,    74,   -72,    52,   -72,
+      59,    87,   -72,    12,   -72,    91,    60,   -72,   -72,   -72,
+     -72,   -72
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -653,35 +652,33 @@ static const yytype_int8 yydefact[] =
 {
        3,     0,     2,     1,     0,     0,     0,     0,     0,     0,
        0,     0,     0,    14,     4,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,    18,     0,     0,    39,    42,
-       0,     0,    44,     0,    25,    26,    27,     0,     0,     0,
-      50,     0,     0,    48,    49,     5,     6,     7,     8,     9,
-      10,    11,    12,    13,     0,     0,     0,     0,     0,    38,
-       0,     0,     0,    30,    28,    29,    31,    32,     0,     0,
-       0,     0,     3,    57,     0,     0,     0,     0,    40,     0,
-       0,    45,    34,    36,    54,    55,    56,     0,    34,    36,
-       0,     0,    47,     0,     0,    16,     0,     0,     0,    35,
-      33,     0,    52,     0,    51,    24,    46,    58,     0,    19,
-      22,     0,    43,     0,    53,     0,     0,    17,     0,    21,
-       0,     0,    15,    20,    23,    41,    37
+       0,     0,     0,     0,     0,    18,     0,     0,    47,    50,
+       0,     0,    52,     0,    30,    31,    32,     0,     0,     0,
+      24,    25,    26,     0,     5,     6,     7,     8,     9,    10,
+      11,    12,    13,     0,     0,     0,     0,     0,    46,     0,
+       0,     0,    38,    36,    37,    39,    40,     0,     0,     3,
+      55,     0,     0,     0,     0,     0,    48,     0,     0,    53,
+      42,    44,    33,    34,    35,     0,     0,     0,    44,     0,
+       0,    16,     0,     0,     0,    43,    41,     0,    27,     0,
+      54,    56,    29,     0,    19,    22,     0,    51,     0,    28,
+       0,     0,    17,     0,    21,     0,     0,    15,    20,    23,
+      49,    45
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -72,   -72,    45,   -72,   -72,   -71,   -72,    29,   -72,   -72,
-     -72,   -13,   -72,   -39,   -70,    18,    19,   -72,   -72,   -72,
-     -72,   -72,   -72,   -72,   -57,   -72,   -72,   -72,   -72,   -72,
-     -72
+     -72,   -72,    40,   -72,   -72,   -71,   -72,    47,   -72,   -72,
+     -72,   -14,   -72,   -72,   -72,   -72,   -72,   -43,   -68,   -72,
+      14,   -72,   -72,   -72,   -72,   -72,   -72,   -72,   -57,   -72
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     1,     2,    14,    15,    57,    16,    26,   117,    17,
-     119,    40,    41,    68,    83,   100,   102,    18,    59,    19,
-      30,    20,    21,    22,    73,    23,    42,    43,    44,    87,
-      92
+       0,     1,     2,    14,    15,    56,    16,    26,   112,    17,
+     114,    39,    40,    41,    42,    43,    85,    67,    81,    96,
+      98,    18,    58,    19,    30,    20,    21,    22,    70,    23
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -689,34 +686,32 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      70,    89,    71,    93,    94,    81,    24,     3,    97,    98,
-       4,     5,     6,     7,     8,     9,    10,    11,    27,    12,
-       4,     5,     6,     7,     8,     9,    10,    11,    33,    12,
-      84,    85,    86,   114,   107,    25,    28,   115,    31,    13,
-      29,    54,   121,   106,    34,    35,    36,    32,   103,    13,
-      37,    38,    45,    63,    64,    65,    66,    67,    34,    35,
-      36,    46,    47,    48,    55,    49,    39,    50,    51,    52,
-      53,    56,    58,    60,    61,    62,    74,    72,    78,    75,
-      79,    76,    69,    77,    80,    82,    88,    91,    95,    96,
-     101,   108,    99,   110,   116,   118,   109,   111,   120,   112,
-     113,   123,   122,   125,   126,   124,   104,     0,   105,     0,
-       0,     0,     0,     0,     0,     0,     0,    90
+      71,    89,    90,    88,    79,     3,    93,    94,    24,     4,
+       5,     6,     7,     8,     9,    10,    11,    27,    12,     4,
+       5,     6,     7,     8,     9,    10,    11,    25,    12,    29,
+     101,   109,   110,    34,    35,    36,    32,   116,    13,    37,
+      38,    33,    99,   100,    44,    82,    83,    84,    13,    62,
+      63,    64,    65,    66,    28,    55,    31,    45,    53,    46,
+      54,    47,    48,    49,    50,    51,    57,    52,    59,    61,
+      60,    68,    69,    72,    73,    74,    76,    75,    77,    78,
+      80,    87,    91,    92,    95,    97,   103,   104,   105,   111,
+     113,   118,   106,   115,   107,   108,   120,   117,   121,   119,
+       0,     0,   102,     0,     0,     0,     0,     0,     0,    86
 };
 
 static const yytype_int8 yycheck[] =
 {
-      39,    71,    41,    74,    75,    62,     4,     0,    79,    80,
-       6,     7,     8,     9,    10,    11,    12,    13,    36,    15,
-       6,     7,     8,     9,    10,    11,    12,    13,     3,    15,
-      24,    25,    26,   103,    91,     4,     7,   108,     9,    35,
-       4,    42,   113,    39,    21,    22,    23,     5,    87,    35,
-      27,    28,    35,    29,    30,    31,    32,    33,    21,    22,
-      23,    35,    35,    35,    17,    35,    43,    35,    35,    35,
-      35,     3,    20,    17,    17,    14,    36,    38,     4,    36,
-      36,    40,    44,    37,    36,     3,     3,    16,     3,    19,
-      17,    41,    34,     5,    18,    15,    37,    37,    19,    37,
-      36,     4,    37,     5,    37,   118,    88,    -1,    89,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    72
+      43,    72,    73,    71,    61,     0,    77,    78,     4,     6,
+       7,     8,     9,    10,    11,    12,    13,    37,    15,     6,
+       7,     8,     9,    10,    11,    12,    13,     4,    15,     4,
+      87,    99,   103,    21,    22,    23,     5,   108,    35,    27,
+      28,     3,    85,    40,    35,    24,    25,    26,    35,    29,
+      30,    31,    32,    33,     7,     3,     9,    35,    43,    35,
+      17,    35,    35,    35,    35,    35,    20,    35,    17,    14,
+      17,    36,    39,    37,    37,    41,     4,    38,    37,    37,
+       3,    16,     3,    19,    34,    17,    42,    38,     5,    18,
+      15,     4,    38,    19,    38,    37,     5,    38,    38,   113,
+      -1,    -1,    88,    -1,    -1,    -1,    -1,    -1,    -1,    69
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
@@ -724,18 +719,18 @@ static const yytype_int8 yycheck[] =
 static const yytype_int8 yystos[] =
 {
        0,    46,    47,     0,     6,     7,     8,     9,    10,    11,
-      12,    13,    15,    35,    48,    49,    51,    54,    62,    64,
-      66,    67,    68,    70,     4,     4,    52,    36,    52,     4,
-      65,    52,     5,     3,    21,    22,    23,    27,    28,    43,
-      56,    57,    71,    72,    73,    35,    35,    35,    35,    35,
-      35,    35,    35,    35,    42,    17,     3,    50,    20,    63,
-      17,    17,    14,    29,    30,    31,    32,    33,    58,    44,
-      58,    58,    38,    69,    36,    36,    40,    37,     4,    36,
-      36,    69,     3,    59,    24,    25,    26,    74,     3,    59,
-      47,    16,    75,    50,    50,     3,    19,    50,    50,    34,
-      60,    17,    61,    58,    60,    61,    39,    69,    41,    37,
-       5,    37,    37,    36,    59,    50,    18,    53,    15,    55,
-      19,    50,    37,     4,    56,     5,    37
+      12,    13,    15,    35,    48,    49,    51,    54,    66,    68,
+      70,    71,    72,    74,     4,     4,    52,    37,    52,     4,
+      69,    52,     5,     3,    21,    22,    23,    27,    28,    56,
+      57,    58,    59,    60,    35,    35,    35,    35,    35,    35,
+      35,    35,    35,    43,    17,     3,    50,    20,    67,    17,
+      17,    14,    29,    30,    31,    32,    33,    62,    36,    39,
+      73,    62,    37,    37,    41,    38,     4,    37,    37,    73,
+       3,    63,    24,    25,    26,    61,    47,    16,    63,    50,
+      50,     3,    19,    50,    50,    34,    64,    17,    65,    62,
+      40,    73,    65,    42,    38,     5,    38,    38,    37,    63,
+      50,    18,    53,    15,    55,    19,    50,    38,     4,    56,
+       5,    38
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
@@ -743,10 +738,10 @@ static const yytype_int8 yyr1[] =
 {
        0,    45,    46,    47,    47,    48,    48,    48,    48,    48,
       48,    48,    48,    48,    48,    49,    50,    51,    52,    53,
-      53,    54,    55,    55,    56,    57,    57,    57,    58,    58,
-      58,    58,    58,    59,    60,    60,    61,    61,    62,    63,
-      63,    64,    65,    66,    67,    68,    69,    70,    71,    71,
-      71,    71,    72,    73,    74,    74,    74,    75,    75
+      53,    54,    55,    55,    56,    56,    56,    57,    58,    59,
+      60,    60,    60,    61,    61,    61,    62,    62,    62,    62,
+      62,    63,    64,    64,    65,    65,    66,    67,    67,    68,
+      69,    70,    71,    72,    73,    74,    74
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
@@ -754,10 +749,10 @@ static const yytype_int8 yyr2[] =
 {
        0,     2,     1,     0,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     1,     8,     3,     7,     1,     0,
-       2,     7,     0,     2,     4,     1,     1,     1,     1,     1,
-       1,     1,     1,     2,     0,     1,     0,     4,     3,     0,
-       2,     8,     1,     6,     2,     4,     3,     4,     1,     1,
-       1,     4,     4,     5,     1,     1,     1,     0,     2
+       2,     7,     0,     2,     1,     1,     1,     4,     5,     4,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     2,     0,     1,     0,     4,     3,     0,     2,     8,
+       1,     6,     2,     4,     3,     3,     5
 };
 
 
@@ -786,7 +781,7 @@ enum { YYENOMEM = -2 };
       }                                                           \
     else                                                          \
       {                                                           \
-        yyerror (YY_("syntax error: cannot back up")); \
+        yyerror (ast_root, YY_("syntax error: cannot back up")); \
         YYERROR;                                                  \
       }                                                           \
   while (0)
@@ -819,7 +814,7 @@ do {                                                                      \
     {                                                                     \
       YYFPRINTF (stderr, "%s ", Title);                                   \
       yy_symbol_print (stderr,                                            \
-                  Kind, Value); \
+                  Kind, Value, ast_root); \
       YYFPRINTF (stderr, "\n");                                           \
     }                                                                     \
 } while (0)
@@ -831,10 +826,11 @@ do {                                                                      \
 
 static void
 yy_symbol_value_print (FILE *yyo,
-                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
+                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, struct AST_Node** ast_root)
 {
   FILE *yyoutput = yyo;
   YY_USE (yyoutput);
+  YY_USE (ast_root);
   if (!yyvaluep)
     return;
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
@@ -849,12 +845,12 @@ yy_symbol_value_print (FILE *yyo,
 
 static void
 yy_symbol_print (FILE *yyo,
-                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
+                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, struct AST_Node** ast_root)
 {
   YYFPRINTF (yyo, "%s %s (",
              yykind < YYNTOKENS ? "token" : "nterm", yysymbol_name (yykind));
 
-  yy_symbol_value_print (yyo, yykind, yyvaluep);
+  yy_symbol_value_print (yyo, yykind, yyvaluep, ast_root);
   YYFPRINTF (yyo, ")");
 }
 
@@ -888,7 +884,7 @@ do {                                                            \
 
 static void
 yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
-                 int yyrule)
+                 int yyrule, struct AST_Node** ast_root)
 {
   int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
@@ -901,7 +897,7 @@ yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr,
                        YY_ACCESSING_SYMBOL (+yyssp[yyi + 1 - yynrhs]),
-                       &yyvsp[(yyi + 1) - (yynrhs)]);
+                       &yyvsp[(yyi + 1) - (yynrhs)], ast_root);
       YYFPRINTF (stderr, "\n");
     }
 }
@@ -909,7 +905,7 @@ yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
 # define YY_REDUCE_PRINT(Rule)          \
 do {                                    \
   if (yydebug)                          \
-    yy_reduce_print (yyssp, yyvsp, Rule); \
+    yy_reduce_print (yyssp, yyvsp, Rule, ast_root); \
 } while (0)
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
@@ -950,9 +946,10 @@ int yydebug;
 
 static void
 yydestruct (const char *yymsg,
-            yysymbol_kind_t yykind, YYSTYPE *yyvaluep)
+            yysymbol_kind_t yykind, YYSTYPE *yyvaluep, struct AST_Node** ast_root)
 {
   YY_USE (yyvaluep);
+  YY_USE (ast_root);
   if (!yymsg)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);
@@ -979,7 +976,7 @@ int yynerrs;
 `----------*/
 
 int
-yyparse (void)
+yyparse (struct AST_Node** ast_root)
 {
     yy_state_fast_t yystate = 0;
     /* Number of tokens to shift before error messages enabled.  */
@@ -1220,156 +1217,340 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 15: /* zone_decl: ZONE IDENTIFIER '=' '(' COORD '-' COORD ')'  */
+  case 2: /* program: statements  */
+#line 62 "parser.y"
+         {
+             *ast_root = (yyvsp[0].node);
+         }
+#line 1226 "parser.tab.c"
+    break;
+
+  case 3: /* statements: %empty  */
+#line 67 "parser.y"
+                                   { (yyval.node) = NULL; }
+#line 1232 "parser.tab.c"
+    break;
+
+  case 4: /* statements: statements statement  */
 #line 68 "parser.y"
-                { 
-                    printf("Zone declaration: %s from (%d,%d) to (%d,%d)\n", 
-                           (yyvsp[-6].identifier), (yyvsp[-3].coord).x, (yyvsp[-3].coord).y, (yyvsp[-1].coord).x, (yyvsp[-1].coord).y); 
-                    free((yyvsp[-6].identifier));
-                }
-#line 1231 "parser.tab.c"
+                                  { if ((yyvsp[0].node) != NULL) { (yyval.node) = ast_create_sequence_node((yyvsp[-1].node), (yyvsp[0].node)); } else { (yyval.node) = (yyvsp[-1].node); } }
+#line 1238 "parser.tab.c"
+    break;
+
+  case 5: /* statement: zone_decl NEWLINE  */
+#line 70 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1244 "parser.tab.c"
+    break;
+
+  case 6: /* statement: plant_stmt NEWLINE  */
+#line 71 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1250 "parser.tab.c"
+    break;
+
+  case 7: /* statement: water_stmt NEWLINE  */
+#line 72 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1256 "parser.tab.c"
+    break;
+
+  case 8: /* statement: harvest_stmt NEWLINE  */
+#line 73 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1262 "parser.tab.c"
+    break;
+
+  case 9: /* statement: fertilize_stmt NEWLINE  */
+#line 74 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1268 "parser.tab.c"
+    break;
+
+  case 10: /* statement: prune_stmt NEWLINE  */
+#line 75 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1274 "parser.tab.c"
+    break;
+
+  case 11: /* statement: wait_stmt NEWLINE  */
+#line 76 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1280 "parser.tab.c"
+    break;
+
+  case 12: /* statement: loop_stmt NEWLINE  */
+#line 77 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1286 "parser.tab.c"
+    break;
+
+  case 13: /* statement: if_stmt NEWLINE  */
+#line 78 "parser.y"
+                                  { (yyval.node) = (yyvsp[-1].node); }
+#line 1292 "parser.tab.c"
+    break;
+
+  case 14: /* statement: NEWLINE  */
+#line 79 "parser.y"
+                                  { (yyval.node) = NULL; }
+#line 1298 "parser.tab.c"
+    break;
+
+  case 15: /* zone_decl: ZONE IDENTIFIER '=' '(' COORD '-' COORD ')'  */
+#line 81 "parser.y"
+                                                       { (yyval.node) = ast_create_zone_decl_node((yyvsp[-6].identifier), (yyvsp[-3].coord), (yyvsp[-1].coord)); }
+#line 1304 "parser.tab.c"
     break;
 
   case 16: /* COORD: NUMBER ',' NUMBER  */
-#line 76 "parser.y"
-                { 
-                    (yyval.coord).x = (yyvsp[-2].number); 
-                    (yyval.coord).y = (yyvsp[0].number); 
-                    printf("Coord: (%d,%d)\n", (yyval.coord).x, (yyval.coord).y);
-                }
-#line 1241 "parser.tab.c"
+#line 83 "parser.y"
+                         { (yyval.coord).x = (yyvsp[-2].number); (yyval.coord).y = (yyvsp[0].number); }
+#line 1310 "parser.tab.c"
     break;
 
   case 17: /* plant_stmt: PLANT PLANT_TYPE AT '(' COORD ')' IN_OPTION  */
-#line 84 "parser.y"
-                { printf("Plant command\n"); free((yyvsp[-5].identifier)); }
-#line 1247 "parser.tab.c"
+#line 85 "parser.y"
+                                                        { (yyval.node) = ast_create_plant_node((yyvsp[-5].identifier), (yyvsp[-2].coord), (yyvsp[0].identifier)); }
+#line 1316 "parser.tab.c"
+    break;
+
+  case 18: /* PLANT_TYPE: IDENTIFIER  */
+#line 87 "parser.y"
+                       { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1322 "parser.tab.c"
+    break;
+
+  case 19: /* IN_OPTION: %empty  */
+#line 89 "parser.y"
+                       { (yyval.identifier) = NULL; }
+#line 1328 "parser.tab.c"
     break;
 
   case 20: /* IN_OPTION: IN IDENTIFIER  */
-#line 90 "parser.y"
-                         { free((yyvsp[0].identifier)); }
-#line 1253 "parser.tab.c"
+#line 89 "parser.y"
+                                                      { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1334 "parser.tab.c"
     break;
 
   case 21: /* water_stmt: WATER '(' COORD ')' FOR DURATION IF_CLAUSE  */
-#line 94 "parser.y"
-                { printf("Water command\n"); }
-#line 1259 "parser.tab.c"
+#line 91 "parser.y"
+                                                       { (yyval.node) = ast_create_water_node((yyvsp[-4].coord), (yyvsp[-1].duration), (yyvsp[0].node)); }
+#line 1340 "parser.tab.c"
     break;
 
-  case 24: /* SENSOR_COND: SENSOR_TYPE COMP VALUE AT_CLAUSE  */
-#line 102 "parser.y"
-                { printf("Sensor condition\n"); free((yyvsp[-3].identifier)); }
-#line 1265 "parser.tab.c"
+  case 22: /* IF_CLAUSE: %empty  */
+#line 93 "parser.y"
+                       { (yyval.node) = NULL; }
+#line 1346 "parser.tab.c"
     break;
 
-  case 25: /* SENSOR_TYPE: MOISTURE_SENSOR  */
+  case 23: /* IF_CLAUSE: IF condition  */
+#line 93 "parser.y"
+                                                     { (yyval.node) = (yyvsp[0].node); }
+#line 1352 "parser.tab.c"
+    break;
+
+  case 24: /* condition: SOIL_COND  */
+#line 95 "parser.y"
+                     { (yyval.node) = (yyvsp[0].node); }
+#line 1358 "parser.tab.c"
+    break;
+
+  case 25: /* condition: WEATHER_COND  */
+#line 95 "parser.y"
+                                                 { (yyval.node) = (yyvsp[0].node); }
+#line 1364 "parser.tab.c"
+    break;
+
+  case 26: /* condition: SENSOR_COND  */
+#line 95 "parser.y"
+                                                                            { (yyval.node) = (yyvsp[0].node); }
+#line 1370 "parser.tab.c"
+    break;
+
+  case 27: /* SOIL_COND: SOIL_MOISTURE COMP VALUE AT_CLAUSE_COORD  */
+#line 97 "parser.y"
+                                                    { (yyval.node) = ast_create_soil_cond_node((yyvsp[-2].op), (yyvsp[-1].value_type), (yyvsp[0].coord)); }
+#line 1376 "parser.tab.c"
+    break;
+
+  case 28: /* WEATHER_COND: WEATHER DOT WEATHER_FIELD COMP VALUE  */
+#line 99 "parser.y"
+                                                   { (yyval.node) = ast_create_weather_cond_node((yyvsp[-2].identifier), (yyvsp[-1].op), (yyvsp[0].value_type)); }
+#line 1382 "parser.tab.c"
+    break;
+
+  case 29: /* SENSOR_COND: SENSOR_TYPE COMP VALUE AT_CLAUSE_COORD  */
+#line 101 "parser.y"
+                                                    { (yyval.node) = ast_create_sensor_cond_node((yyvsp[-3].identifier), (yyvsp[-2].op), (yyvsp[-1].value_type), (yyvsp[0].coord)); }
+#line 1388 "parser.tab.c"
+    break;
+
+  case 30: /* SENSOR_TYPE: MOISTURE_SENSOR  */
+#line 103 "parser.y"
+                             { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1394 "parser.tab.c"
+    break;
+
+  case 31: /* SENSOR_TYPE: TEMPERATURE_SENSOR  */
+#line 103 "parser.y"
+                                                               { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1400 "parser.tab.c"
+    break;
+
+  case 32: /* SENSOR_TYPE: HUMIDITY_SENSOR  */
+#line 103 "parser.y"
+                                                                                              { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1406 "parser.tab.c"
+    break;
+
+  case 33: /* WEATHER_FIELD: TEMPERATURE  */
 #line 105 "parser.y"
-                             { (yyval.identifier) = (yyvsp[0].identifier); }
-#line 1271 "parser.tab.c"
-    break;
-
-  case 26: /* SENSOR_TYPE: TEMPERATURE_SENSOR  */
-#line 106 "parser.y"
-                                { (yyval.identifier) = (yyvsp[0].identifier); }
-#line 1277 "parser.tab.c"
-    break;
-
-  case 27: /* SENSOR_TYPE: HUMIDITY_SENSOR  */
-#line 107 "parser.y"
-                             { (yyval.identifier) = (yyvsp[0].identifier); }
-#line 1283 "parser.tab.c"
-    break;
-
-  case 33: /* VALUE: NUMBER PERCENT_OPT  */
-#line 113 "parser.y"
-                { /* Handle value */ }
-#line 1289 "parser.tab.c"
-    break;
-
-  case 38: /* harvest_stmt: HARVEST PLANT_TYPE FROM_OPTION  */
-#line 125 "parser.y"
-                { printf("Harvest command\n"); free((yyvsp[-1].identifier)); }
-#line 1295 "parser.tab.c"
-    break;
-
-  case 40: /* FROM_OPTION: FROM IDENTIFIER  */
-#line 129 "parser.y"
-                             { free((yyvsp[0].identifier)); }
-#line 1301 "parser.tab.c"
-    break;
-
-  case 41: /* fertilize_stmt: FERTILIZE FERTILIZER_TYPE AT '(' COORD ')' FOR DURATION  */
-#line 133 "parser.y"
-                { printf("Fertilize command\n"); free((yyvsp[-6].identifier)); }
-#line 1307 "parser.tab.c"
-    break;
-
-  case 43: /* prune_stmt: PRUNE PLANT_TYPE AT '(' COORD ')'  */
-#line 139 "parser.y"
-                { printf("Prune command\n"); free((yyvsp[-4].identifier)); }
-#line 1313 "parser.tab.c"
-    break;
-
-  case 44: /* wait_stmt: WAIT DURATION  */
-#line 143 "parser.y"
-          {
-              printf("Wait command: %d%c\n", (yyvsp[0].duration).val, (yyvsp[0].duration).unit);
-          }
-#line 1321 "parser.tab.c"
-    break;
-
-  case 45: /* loop_stmt: LOOP NUMBER TIMES block  */
-#line 149 "parser.y"
-                { printf("Loop %d times\n", (yyvsp[-2].number)); }
-#line 1327 "parser.tab.c"
-    break;
-
-  case 46: /* block: '{' statements '}'  */
-#line 153 "parser.y"
-                { printf("Block\n"); }
-#line 1333 "parser.tab.c"
-    break;
-
-  case 47: /* if_stmt: IF condition block else_clause  */
-#line 157 "parser.y"
-                { printf("If statement\n"); }
-#line 1339 "parser.tab.c"
-    break;
-
-  case 51: /* condition: VARCOMP COMP NUMBER PERCENT_OPT  */
-#line 160 "parser.y"
-                                                                                    { printf("Sensor condition\n"); }
-#line 1345 "parser.tab.c"
-    break;
-
-  case 53: /* WEATHER_COND: WEATHER '.' WEATHER_FIELD COMP VALUE  */
-#line 165 "parser.y"
-                { free((yyvsp[-2].identifier)); }
-#line 1351 "parser.tab.c"
-    break;
-
-  case 54: /* WEATHER_FIELD: TEMPERATURE  */
-#line 168 "parser.y"
                            { (yyval.identifier) = (yyvsp[0].identifier); }
-#line 1357 "parser.tab.c"
+#line 1412 "parser.tab.c"
     break;
 
-  case 55: /* WEATHER_FIELD: HUMIDITY  */
-#line 169 "parser.y"
-                        { (yyval.identifier) = (yyvsp[0].identifier); }
-#line 1363 "parser.tab.c"
+  case 34: /* WEATHER_FIELD: HUMIDITY  */
+#line 105 "parser.y"
+                                                   { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1418 "parser.tab.c"
     break;
 
-  case 56: /* WEATHER_FIELD: RAIN  */
-#line 170 "parser.y"
-                    { (yyval.identifier) = (yyvsp[0].identifier); }
-#line 1369 "parser.tab.c"
+  case 35: /* WEATHER_FIELD: RAIN  */
+#line 105 "parser.y"
+                                                                       { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1424 "parser.tab.c"
+    break;
+
+  case 36: /* COMP: LT  */
+#line 107 "parser.y"
+         { (yyval.op) = OP_LT; }
+#line 1430 "parser.tab.c"
+    break;
+
+  case 37: /* COMP: GT  */
+#line 107 "parser.y"
+                              { (yyval.op) = OP_GT; }
+#line 1436 "parser.tab.c"
+    break;
+
+  case 38: /* COMP: EQ  */
+#line 107 "parser.y"
+                                                   { (yyval.op) = OP_EQ; }
+#line 1442 "parser.tab.c"
+    break;
+
+  case 39: /* COMP: LE  */
+#line 107 "parser.y"
+                                                                        { (yyval.op) = OP_LE; }
+#line 1448 "parser.tab.c"
+    break;
+
+  case 40: /* COMP: GE  */
+#line 107 "parser.y"
+                                                                                             { (yyval.op) = OP_GE; }
+#line 1454 "parser.tab.c"
+    break;
+
+  case 41: /* VALUE: NUMBER PERCENT_OPT  */
+#line 109 "parser.y"
+                          { (yyval.value_type).value = (yyvsp[-1].number); (yyval.value_type).is_percent = ((yyvsp[0].number) != 0); }
+#line 1460 "parser.tab.c"
+    break;
+
+  case 42: /* PERCENT_OPT: %empty  */
+#line 111 "parser.y"
+                         { (yyval.number) = 0; }
+#line 1466 "parser.tab.c"
+    break;
+
+  case 43: /* PERCENT_OPT: PERCENT  */
+#line 111 "parser.y"
+                                               { (yyval.number) = 1; }
+#line 1472 "parser.tab.c"
+    break;
+
+  case 44: /* AT_CLAUSE_COORD: %empty  */
+#line 113 "parser.y"
+                             { (yyval.coord).x = -1; (yyval.coord).y = -1; }
+#line 1478 "parser.tab.c"
+    break;
+
+  case 45: /* AT_CLAUSE_COORD: AT '(' COORD ')'  */
+#line 113 "parser.y"
+                                                                          { (yyval.coord) = (yyvsp[-1].coord); }
+#line 1484 "parser.tab.c"
+    break;
+
+  case 46: /* harvest_stmt: HARVEST PLANT_TYPE FROM_OPTION  */
+#line 115 "parser.y"
+                                             { (yyval.node) = ast_create_harvest_node((yyvsp[-1].identifier), (yyvsp[0].identifier)); }
+#line 1490 "parser.tab.c"
+    break;
+
+  case 47: /* FROM_OPTION: %empty  */
+#line 117 "parser.y"
+                         { (yyval.identifier) = NULL; }
+#line 1496 "parser.tab.c"
+    break;
+
+  case 48: /* FROM_OPTION: FROM IDENTIFIER  */
+#line 117 "parser.y"
+                                                          { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1502 "parser.tab.c"
+    break;
+
+  case 49: /* fertilize_stmt: FERTILIZE FERTILIZER_TYPE AT '(' COORD ')' FOR DURATION  */
+#line 119 "parser.y"
+                                                                        { (yyval.node) = ast_create_fertilize_node((yyvsp[-6].identifier), (yyvsp[-3].coord), (yyvsp[0].duration)); }
+#line 1508 "parser.tab.c"
+    break;
+
+  case 50: /* FERTILIZER_TYPE: IDENTIFIER  */
+#line 121 "parser.y"
+                            { (yyval.identifier) = (yyvsp[0].identifier); }
+#line 1514 "parser.tab.c"
+    break;
+
+  case 51: /* prune_stmt: PRUNE PLANT_TYPE AT '(' COORD ')'  */
+#line 123 "parser.y"
+                                              { (yyval.node) = ast_create_prune_node((yyvsp[-4].identifier), (yyvsp[-1].coord)); }
+#line 1520 "parser.tab.c"
+    break;
+
+  case 52: /* wait_stmt: WAIT DURATION  */
+#line 125 "parser.y"
+                         { (yyval.node) = ast_create_wait_node((yyvsp[0].duration).val, (yyvsp[0].duration).unit); }
+#line 1526 "parser.tab.c"
+    break;
+
+  case 53: /* loop_stmt: LOOP NUMBER TIMES block  */
+#line 127 "parser.y"
+                                   { (yyval.node) = ast_create_loop_node((yyvsp[-2].number), (yyvsp[0].node)); }
+#line 1532 "parser.tab.c"
+    break;
+
+  case 54: /* block: '{' statements '}'  */
+#line 129 "parser.y"
+                          { (yyval.node) = (yyvsp[-1].node); }
+#line 1538 "parser.tab.c"
+    break;
+
+  case 55: /* if_stmt: IF condition block  */
+#line 131 "parser.y"
+                                                          { (yyval.node) = ast_create_if_node((yyvsp[-1].node), (yyvsp[0].node), NULL); }
+#line 1544 "parser.tab.c"
+    break;
+
+  case 56: /* if_stmt: IF condition block ELSE block  */
+#line 132 "parser.y"
+                                       { (yyval.node) = ast_create_if_node((yyvsp[-3].node), (yyvsp[-2].node), (yyvsp[0].node)); }
+#line 1550 "parser.tab.c"
     break;
 
 
-#line 1373 "parser.tab.c"
+#line 1554 "parser.tab.c"
 
       default: break;
     }
@@ -1416,7 +1597,7 @@ yyerrlab:
   if (!yyerrstatus)
     {
       ++yynerrs;
-      yyerror (YY_("syntax error"));
+      yyerror (ast_root, YY_("syntax error"));
     }
 
   if (yyerrstatus == 3)
@@ -1433,7 +1614,7 @@ yyerrlab:
       else
         {
           yydestruct ("Error: discarding",
-                      yytoken, &yylval);
+                      yytoken, &yylval, ast_root);
           yychar = YYEMPTY;
         }
     }
@@ -1489,7 +1670,7 @@ yyerrlab1:
 
 
       yydestruct ("Error: popping",
-                  YY_ACCESSING_SYMBOL (yystate), yyvsp);
+                  YY_ACCESSING_SYMBOL (yystate), yyvsp, ast_root);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1527,7 +1708,7 @@ yyabortlab:
 | yyexhaustedlab -- YYNOMEM (memory exhaustion) comes here.  |
 `-----------------------------------------------------------*/
 yyexhaustedlab:
-  yyerror (YY_("memory exhausted"));
+  yyerror (ast_root, YY_("memory exhausted"));
   yyresult = 2;
   goto yyreturnlab;
 
@@ -1542,7 +1723,7 @@ yyreturnlab:
          user semantic actions for why this is necessary.  */
       yytoken = YYTRANSLATE (yychar);
       yydestruct ("Cleanup: discarding lookahead",
-                  yytoken, &yylval);
+                  yytoken, &yylval, ast_root);
     }
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYABORT or YYACCEPT.  */
@@ -1551,7 +1732,7 @@ yyreturnlab:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp);
+                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp, ast_root);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
@@ -1562,23 +1743,12 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 177 "parser.y"
+#line 135 "parser.y"
 
 
-int main(int argc, char *argv[]) {
-    if (argc > 1) {
-        yyin = fopen(argv[1], "r");
-        if (!yyin) {
-            perror("Error opening file");
-            return 1;
-        }
-    }
-    
-    yyparse();
-    
-    if (argc > 1) {
-        fclose(yyin);
-    }
-    
-    return 0;
+void yyerror(struct AST_Node** ast_root, const char* s) {
+    // A linha (void)ast_root; evita um aviso de "parâmetro não utilizado".
+    // Estamos dizendo ao compilador que sabemos que não estamos usando, e tudo bem.
+    (void)ast_root;
+    fprintf(stderr, "Erro de sintaxe na linha %d: %s\n", yylineno, s);
 }

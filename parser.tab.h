@@ -44,6 +44,12 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 15 "parser.y"
+
+    #include "types.h"
+
+#line 53 "parser.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -87,7 +93,8 @@ extern int yydebug;
     GE = 288,                      /* GE  */
     PERCENT = 289,                 /* PERCENT  */
     NEWLINE = 290,                 /* NEWLINE  */
-    VARCOMP = 291                  /* VARCOMP  */
+    DOT = 291,                     /* DOT  */
+    IF_THEN_ELSE = 292             /* IF_THEN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -96,21 +103,18 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 15 "parser.y"
+#line 21 "parser.y"
 
     int number;
     char *identifier;
     char* str;
-    struct {
-        int val;
-        char unit;
-    } duration;
-    struct {
-        int x;
-        int y;
-    } coord;
+    int op;
+    struct duration duration;
+    struct coord coord;
+    struct value_type value_type;
+    struct AST_Node* node;
 
-#line 114 "parser.tab.h"
+#line 118 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -122,7 +126,7 @@ typedef union YYSTYPE YYSTYPE;
 extern YYSTYPE yylval;
 
 
-int yyparse (void);
+int yyparse (struct AST_Node** ast_root);
 
 
 #endif /* !YY_YY_PARSER_TAB_H_INCLUDED  */

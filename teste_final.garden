@@ -1,0 +1,33 @@
+// Tarefa 1: Definir as zonas de cultivo
+ZONE HortaNorte = (0,0 - 5,5)
+ZONE HortaSul = (6,0 - 10,5)
+
+// Tarefa 2: Plantio inicial com base na temperatura
+IF WEATHER.TEMPERATURE > 20 {
+    // Clima quente, bom para tomates
+    PLANT Tomate AT (1,1) IN HortaNorte
+    PLANT Manjericao AT (1,2) IN HortaNorte
+} ELSE {
+    // Clima frio, bom para folhas
+    PLANT Alface AT (7,1) IN HortaSul
+    PLANT Couve AT (7,2) IN HortaSul
+}
+
+// Tarefa 3: Ciclo de manutenção diário
+LOOP 2 TIMES {
+    
+    // Regar os tomates se o solo estiver seco
+    WATER (1,1) FOR 15s IF SOIL_MOISTURE < 40% AT (1,1)
+    
+    // Fertilizar a horta sul uma vez por ciclo
+    FERTILIZE NPK_10_10_10 AT (7,1) FOR 30s  // <-- CORRIGIDO AQUI
+    
+    // Pausa para o próximo dia
+    WAIT 5s
+}
+
+// Tarefa 4: Colheita e poda final
+HARVEST Tomate FROM HortaNorte
+PRUNE Alface AT (7,1)
+
+// Fim do script
